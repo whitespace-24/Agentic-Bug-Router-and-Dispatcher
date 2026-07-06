@@ -156,7 +156,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 Create a `.env` file in the project root.
 
@@ -166,7 +166,7 @@ GROQ_API_KEY=your_groq_api_key_here
 
 ---
 
-## 📧 Gmail MCP Setup
+## Gmail MCP Setup
 
 Place your Google OAuth credentials in the project root:
 
