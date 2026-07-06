@@ -1,0 +1,6 @@
+langgraph
+langchain-groq
+langchain-mcp-adapters
+python-dotenv
+sentence-transformers
+numpy

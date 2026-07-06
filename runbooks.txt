@@ -1,0 +1,78 @@
+COMPANY RUNBOOKS & KNOWN FIXES
+
+[Frontend & UI]
+Issue: Button overlapping text on mobile or layout breaking on small screens.
+Fix: Revert the CSS padding changes in commit #48a2 and verify media queries. Clear the Cloudflare CDN cache.
+
+Issue: CORS (Cross-Origin Resource Sharing) policy blocking API requests.
+Fix: The frontend domain was likely dropped from the backend whitelist. Update `cors_origins.yaml` in the API gateway to include the production UI domain and redeploy.
+
+Issue: React state not syncing or page requires manual refresh to see new data.
+Fix: The WebSocket connection is dropping. Check the `socket.io` fallback transports and ensure the load balancer has sticky sessions enabled.
+
+Issue: Blank white screen on load (Client-side crash).
+Fix: A swallowed JavaScript exception is crashing the React tree. Verify that the latest Webpack bundle deployed successfully and rollback the UI deployment if necessary.
+
+Issue: Modal or dropdown menus appearing behind other elements.
+Fix: A z-index stacking context issue was introduced in the new navigation bar. Force the `z-index` of the modal portal to 9999 in the global stylesheet.
+
+Issue: Infinite loading spinner on the billing dashboard.
+Fix: The Stripe API frontend client is failing to initialize. Check if the `STRIPE_PUBLIC_KEY` environment variable is missing from the Vercel/Netlify build settings.
+
+[Database & Storage]
+Issue: 500 Internal Server error when saving user profile or writing data.
+Fix: The Postgres connection pool is maxed out. Restart the `db-pooler` service and increase `max_connections` to 200 in `pg_hba.conf`.
+
+Issue: High latency or timeout on search queries / dashboard loading.
+Fix: A missing index is causing a sequential scan on the `transactions` table. Run the `CREATE INDEX CONCURRENTLY` script found in runbook #88.
+
+Issue: Deadlock detected during batch update.
+Fix: Two microservices are trying to update the same row out of order. Manually kill the lowest-priority Postgres PID and restart the batch worker queue.
+
+Issue: Data missing after a recent deployment.
+Fix: The database migrations failed to run during the CI/CD pipeline. SSH into the primary worker node and manually execute the `db:migrate` command.
+
+Issue: Users reporting stale data on their dashboard.
+Fix: The read-replica database is lagging behind the primary master. Temporarily route all read queries to the master DB while the replica catches up.
+
+Issue: Database crashed with "Out of Memory" or OOM Killer logs.
+Fix: A massive analytical query consumed all available RAM. Reboot the database instance and enforce a strict `work_mem` limit per query in the Postgres config.
+
+[Authentication & Security]
+Issue: Password reset link expired immediately or says invalid token.
+Fix: The auth token generation server has clock drift. Resync the NTP daemon on the auth-server cluster to ensure timestamps match the database.
+
+Issue: Users getting 401 Unauthorized after successful login.
+Fix: The JWT signature secret was rotated but the backend nodes haven't picked up the new environment variable. Trigger a rolling restart of the backend pods.
+
+Issue: OAuth login (Google/GitHub) redirecting to an error page.
+Fix: The callback URI does not match our current environment. Ensure the callback URL is explicitly whitelisted in the identity provider settings.
+
+Issue: Rate limit exceeded for login attempts.
+Fix: A brute-force attempt triggered the Redis rate limiter. If a legitimate user is blocked, manually flush their IP from the Redis `auth_strikes` cache.
+
+Issue: Enterprise users cannot log in via SAML / SSO.
+Fix: The identity provider's SSL certificate expired. Obtain the new x509 public cert from the client's IT team and update their SSO configuration profile in our admin panel.
+
+Issue: 2FA / MFA SMS messages are not being delivered.
+Fix: The Twilio API balance is depleted or the endpoint is failing. Switch the fallback SMS provider to AWS SNS in the feature flag dashboard.
+
+[Backend API & Workers]
+Issue: Webhooks from third-party services are timing out.
+Fix: The webhook ingestion queue is backed up. Scale the `celery-worker` deployment from 2 to 10 instances until the backlog is cleared.
+
+Issue: 502 Bad Gateway across all API routes.
+Fix: The Nginx reverse proxy lost connection to the Gunicorn/Uvicorn upstream servers. Restart the application backend service and check for port binding conflicts.
+
+Issue: API responding with "TypeError: Object of type datetime is not JSON serializable".
+Fix: A new API endpoint is returning a raw datetime object instead of an ISO-8601 string. Apply a hotfix to use standard JSON serialization for that response payload.
+
+[Infrastructure & DevOps]
+Issue: "No space left on device" error in server logs.
+Fix: The application log files have filled up the entire disk volume. Run `journalctl --vacuum-time=1d` and delete old Docker images using `docker image prune -a`.
+
+Issue: Sudden spike in 503 Service Unavailable errors.
+Fix: The Kubernetes cluster is repeatedly terminating a pod (CrashLoopBackOff) due to a failing health check. Disable the strict readiness probe temporarily to keep the pod alive for debugging.
+
+Issue: Images or file uploads are failing with 403 Access Denied.
+Fix: The AWS S3 bucket IAM policy was accidentally modified. Restore the IAM role permissions to allow `s3:PutObject` for the application backend service.
