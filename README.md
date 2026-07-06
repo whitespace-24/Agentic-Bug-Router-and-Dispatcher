@@ -26,5 +26,5 @@ This project utilizes a Supervisor/Worker multi-agent workflow:
 
 1. **Clone the repository:**
    ```bash
-   git clone <your_repo_url>
+   git clone https://github.com/whitespace-24/Agentic-Bug-Router-and-Dispatcher
    cd <your_repo_directory>
