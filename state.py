@@ -5,5 +5,5 @@ class AgentState(TypedDict):
     category: str
     dev_email: str
     summary: str
-    runbook_solution: str  # New RAG context
+    runbook_solution: str  
     draft: str
