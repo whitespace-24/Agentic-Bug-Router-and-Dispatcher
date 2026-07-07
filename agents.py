@@ -7,12 +7,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize LLMs & Embedding Models
 llm = ChatGroq(model="llama-3.3-70b-versatile")
 print("[System] Loading SentenceTransformer (all-MiniLM-L6-v2)...")
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Manual Cosine Similarity (Exactly as required in Assignment 2)
+#cosine similarity like assignment 2
 def compute_cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
@@ -50,7 +49,7 @@ def retrieve_runbook(state: AgentState):
     except FileNotFoundError:
         return {"runbook_solution": "No runbook file found."}
 
-    # 1. Parse the runbook text
+    # Parse the runbook text
     issues = []
     fixes = []
     for line in content.split('\n'):
@@ -62,11 +61,11 @@ def retrieve_runbook(state: AgentState):
     if not issues:
         return {"runbook_solution": "No valid issues found in runbook."}
 
-    # 2. Embed the runbook issues & the user's bug summary
+    # Embed the runbook issues & the user's bug summary
     issue_embeddings = embedder.encode(issues)
     query_embedding = embedder.encode(state['summary'])
 
-    # 3. Calculate Manual Cosine Similarity
+    # Calculate  Cosine Similarity
     best_score = -1
     best_idx = -1
     
@@ -76,7 +75,7 @@ def retrieve_runbook(state: AgentState):
             best_score = score
             best_idx = i
 
-    # 4. Threshold check (Semantic match > 0.4 usually indicates relevance for MiniLM)
+    # Threshold check > 0.4
     if best_score > 0.4:
         solution = fixes[best_idx]
         print(f" -> Semantic Match Found (Score: {best_score:.2f}): {solution}")
