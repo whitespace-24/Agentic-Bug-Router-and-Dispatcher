@@ -6,7 +6,6 @@ from state import AgentState
 from agents import categorize_bug, retrieve_runbook, draft_ticket
 from mcp_client import get_mcp_client
 
-# Suppress the noisy plain-text MCP warning
 logging.getLogger("mcp").setLevel(logging.CRITICAL)
 load_dotenv()
 
@@ -16,7 +15,7 @@ def build_graph():
     builder.add_node("retrieve_runbook", retrieve_runbook)
     builder.add_node("draft_ticket", draft_ticket)
 
-    # The new linear RAG pipeline
+    # The new linear pipeline
     builder.set_entry_point("categorize_bug")
     builder.add_edge("categorize_bug", "retrieve_runbook")
     builder.add_edge("retrieve_runbook", "draft_ticket")
